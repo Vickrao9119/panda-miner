@@ -1,0 +1,12 @@
+{
+  "name": "panda-miner-fullstack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack Panda Miner app with backend-served client",
+  "scripts": {
+    "start": "npm --prefix server start",
+    "dev": "npm --prefix server run dev",
+    "install:server": "npm --prefix server install",
+    "diagnose:mongo": "npm --prefix server run diagnose:mongo"
+  }
+}

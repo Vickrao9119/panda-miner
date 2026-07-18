@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Panda Miner</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="profile">
+      <div class="avatar"><img src="assets/mascot/mascot_idle.svg" alt=""></div>
+      <div class="profile-info">
+        <span class="player-name" id="playerName">Miner</span>
+        <div class="level-row">
+          <img class="mini-icon" src="assets/badges/badge_level.svg" alt="">
+          <span id="levelLabel">Lv. 1</span>
+        </div>
+      </div>
+    </div>
+    <div class="balance-pill">
+      <img class="mini-icon" src="assets/icons/coin_gold.svg" alt="">
+      <span id="coinBalance">0</span>
+    </div>
+  </header>
+
+  <!-- XP bar -->
+  <div class="xp-wrap">
+    <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+    <span class="xp-text"><img class="mini-icon tiny" src="assets/icons/xp.svg" alt=""> <span id="xpText">0 / 100 XP</span></span>
+  </div>
+
+  <!-- Views -->
+  <main class="views">
+
+    <!-- MINE VIEW -->
+    <section class="view active" id="view-mine">
+      <div class="stage">
+        <div class="stage-glow"></div>
+        <button class="mascot-btn" id="mascotBtn" aria-label="Tap to mine">
+          <img id="mascotImg" src="assets/mascot/mascot_idle.svg" alt="Panda Miner">
+        </button>
+        <div class="floaters" id="floaters"></div>
+      </div>
+
+      <div class="energy-wrap">
+        <img class="mini-icon" src="assets/icons/energy.svg" alt="">
+        <div class="energy-track"><div class="energy-fill" id="energyFill"></div></div>
+        <span id="energyText">1000/1000</span>
+      </div>
+
+      <div class="quick-row">
+        <button class="quick-card" id="openChestBtn" disabled>
+          <img src="assets/icons/chest.svg" alt="">
+          <span class="quick-title">Chest</span>
+          <span class="quick-sub" id="chestSub">Locked</span>
+        </button>
+        <button class="quick-card" id="openBoxBtn">
+          <img src="assets/icons/mysterybox.svg" alt="">
+          <span class="quick-title">Mystery box</span>
+          <span class="quick-sub" id="boxSub">Ready</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SHOP VIEW -->
+    <section class="view" id="view-shop">
+      <h2 class="view-title">Shop</h2>
+      <p class="view-sub">Spend coins on boosts and gear.</p>
+      <div class="shop-list" id="shopList"></div>
+    </section>
+
+    <!-- RANK VIEW -->
+    <section class="view" id="view-rank">
+      <h2 class="view-title">Leaderboard</h2>
+      <p class="view-sub">Top miners this week.</p>
+      <div class="rank-list" id="rankList"></div>
+    </section>
+
+    <!-- PROFILE VIEW -->
+    <section class="view" id="view-profile">
+      <h2 class="view-title">Profile</h2>
+      <div class="profile-card">
+        <img src="assets/mascot/mascot_happy.svg" alt="" class="profile-mascot">
+        <div>
+          <div class="player-name" id="profileName">Miner</div>
+          <div class="view-sub" id="profileStats">Level 1 · 0 coins mined</div>
+        </div>
+      </div>
+      <h3 class="section-label">Badges earned</h3>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </section>
+
+    <!-- WALLET VIEW -->
+    <section class="view" id="view-wallet">
+      <h2 class="view-title">Wallet</h2>
+      <p class="view-sub">Connect your TON wallet to withdraw earnings.</p>
+      <div class="wallet-card">
+        <div class="wallet-status" id="walletStatus">Not connected</div>
+        <div class="wallet-balance">
+          <span class="label">Balance:</span>
+          <span id="walletBalance">0</span>
+          <span class="unit">coins</span>
+        </div>
+        <button class="action-btn" id="connectWalletBtn">Connect Wallet</button>
+        <button class="action-btn secondary" id="withdrawBtn" disabled>Withdraw</button>
+      </div>
+      <h3 class="section-label">Transaction History</h3>
+      <div class="transaction-list" id="transactionList"></div>
+    </section>
+
+    <!-- REFERRAL VIEW -->
+    <section class="view" id="view-referral">
+      <h2 class="view-title">Referrals</h2>
+      <p class="view-sub">Invite friends and earn passive income!</p>
+      <div class="referral-card">
+        <div class="referral-stats">
+          <div class="stat-item">
+            <span class="stat-value" id="referralCount">0</span>
+            <span class="stat-label">Referrals</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="referralEarnings">0</span>
+            <span class="stat-label">Earned</span>
+          </div>
+        </div>
+        <div class="referral-code-box">
+          <span class="label">Your code:</span>
+          <span id="referralCode">---</span>
+          <button class="copy-btn" id="copyReferralBtn">Copy</button>
+        </div>
+        <button class="action-btn" id="shareReferralBtn">Share Link</button>
+      </div>
+      <h3 class="section-label">Your Referrals</h3>
+      <div class="referral-list" id="referralList"></div>
+    </section>
+
+    <!-- TASKS VIEW -->
+    <section class="view" id="view-tasks">
+      <h2 class="view-title">Tasks</h2>
+      <p class="view-sub">Complete tasks to earn rewards.</p>
+      <div class="task-list" id="taskList"></div>
+    </section>
+
+    <!-- FRIENDS VIEW -->
+    <section class="view" id="view-friends">
+      <h2 class="view-title">Friends</h2>
+      <p class="view-sub">Add friends and track their progress.</p>
+      <div class="search-box">
+        <input type="text" id="friendSearchInput" placeholder="Search users...">
+        <button class="search-btn" id="friendSearchBtn">Search</button>
+      </div>
+      <div class="friend-list" id="friendList"></div>
+      <h3 class="section-label">Pending Requests</h3>
+      <div class="friend-list" id="pendingList"></div>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section class="view" id="view-settings">
+      <h2 class="view-title">Settings</h2>
+      <p class="view-sub">Customize your experience.</p>
+      <div class="settings-list">
+        <div class="setting-item">
+          <span class="setting-label">Sound Effects</span>
+          <label class="toggle">
+            <input type="checkbox" id="soundToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Music</span>
+          <label class="toggle">
+            <input type="checkbox" id="musicToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Vibration</span>
+          <label class="toggle">
+            <input type="checkbox" id="vibrationToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Notifications</span>
+          <label class="toggle">
+            <input type="checkbox" id="notificationsToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Language</span>
+          <select id="languageSelect" class="setting-select">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ru">Русский</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Theme</span>
+          <select id="themeSelect" class="setting-select">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+      <button class="action-btn danger" id="resetSettingsBtn">Reset Settings</button>
+    </section>
+
+    <!-- NOTIFICATIONS VIEW -->
+    <section class="view" id="view-notifications">
+      <h2 class="view-title">Notifications</h2>
+      <p class="view-sub">Stay updated with your activity.</p>
+      <div class="notification-list" id="notificationList"></div>
+      <button class="action-btn secondary" id="markAllReadBtn">Mark All Read</button>
+    </section>
+
+  </main>
+
+  <!-- Bottom nav -->
+  <nav class="tabbar">
+    <button class="tab active" data-view="mine">
+      <img src="assets/icons/pickaxe.svg" alt=""><span>Mine</span>
+    </button>
+    <button class="tab" data-view="shop">
+      <img src="assets/icons/lightning.svg" alt=""><span>Shop</span>
+    </button>
+    <button class="tab" data-view="tasks">
+      <img src="assets/icons/chest.svg" alt=""><span>Tasks</span>
+    </button>
+    <button class="tab" data-view="friends">
+      <img src="assets/icons/backpack.svg" alt=""><span>Friends</span>
+    </button>
+    <button class="tab" data-view="more">
+      <img src="assets/badges/badge_level.svg" alt=""><span>More</span>
+    </button>
+  </nav>
+
+  <!-- More menu (sub-navigation) -->
+  <div class="more-menu" id="moreMenu">
+    <button class="more-item" data-view="rank">
+      <img src="assets/badges/badge_rank.svg" alt=""><span>Leaderboard</span>
+    </button>
+    <button class="more-item" data-view="wallet">
+      <img src="assets/icons/coin_gold.svg" alt=""><span>Wallet</span>
+    </button>
+    <button class="more-item" data-view="referral">
+      <img src="assets/icons/lightning.svg" alt=""><span>Referrals</span>
+    </button>
+    <button class="more-item" data-view="profile">
+      <img src="assets/mascot/mascot_idle.svg" alt=""><span>Profile</span>
+    </button>
+    <button class="more-item" data-view="settings">
+      <img src="assets/icons/shield.svg" alt=""><span>Settings</span>
+    </button>
+    <button class="more-item" data-view="notifications">
+      <img src="assets/icons/chest.svg" alt=""><span>Notifications</span>
+    </button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
