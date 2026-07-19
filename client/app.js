@@ -839,6 +839,7 @@ document.querySelectorAll('.more-item').forEach(item => {
     await refreshState();
     await loadShop();
     await loadLeaderboard();
+    await loadProfile();
     render();
     console.log('[app] Application initialized successfully');
   } catch (e) {
