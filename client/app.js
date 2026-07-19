@@ -272,6 +272,38 @@ async function loadLeaderboard() {
   }
 }
 
+/* ---------- Profile ---------- */
+async function loadProfile() {
+  try {
+    const data = await api('/users/profile');
+    if (data.profile) {
+      els.profileName.textContent = data.profile.firstName || data.profile.username || 'Miner';
+      els.profileStats.textContent = `Level ${data.profile.level || 1} · ${fmt(data.profile.totalMined || 0)} coins mined`;
+      
+      // Load achievements/badges
+      const achievementsData = await api('/users/achievements');
+      els.badgeGrid.innerHTML = '';
+      if (achievementsData.achievements && achievementsData.achievements.length > 0) {
+        achievementsData.achievements.forEach(achievement => {
+          const cell = document.createElement('div');
+          cell.className = 'badge-cell';
+          cell.innerHTML = `<img src="${achievement.icon || 'assets/badges/badge_reward.svg'}" alt=""><span>${achievement.name}</span>`;
+          els.badgeGrid.appendChild(cell);
+        });
+      } else {
+        // Show default badges based on user stats
+        renderBadges();
+      }
+    }
+  } catch (e) {
+    console.error('[app] Failed to load profile:', e);
+    // Fallback to state data
+    els.profileName.textContent = state.playerName || 'Miner';
+    els.profileStats.textContent = `Level ${state.level || 1} · ${fmt(state.totalMined || 0)} coins mined`;
+    renderBadges();
+  }
+}
+
 /* ---------- Wallet ---------- */
 async function loadWallet() {
   try {
@@ -744,21 +776,23 @@ document.querySelectorAll('.tab').forEach(tab => {
     haptic('light');
     
     // Load data for specific views
-    if (view === 'wallet') {
+    if (view === "wallet") {
       loadWallet();
       loadTransactions();
-    } else if (view === 'referral') {
+    } else if (view === "referral") {
       loadReferral();
-    } else if (view === 'tasks') {
+    } else if (view === "tasks") {
       loadTasks();
-    } else if (view === 'friends') {
+    } else if (view === "friends") {
       loadFriends();
-    } else if (view === 'settings') {
+    } else if (view === "settings") {
       loadSettings();
-    } else if (view === 'notifications') {
+    } else if (view === "notifications") {
       loadNotifications();
-    } else if (view === 'rank') {
+    } else if (view === "rank") {
       loadLeaderboard();
+    } else if (view === "profile") {
+      loadProfile();
     }
   });
 });
@@ -777,17 +811,19 @@ document.querySelectorAll('.more-item').forEach(item => {
     haptic('light');
     
     // Load data for specific views
-    if (view === 'wallet') {
+    if (view === "wallet") {
       loadWallet();
       loadTransactions();
-    } else if (view === 'referral') {
+    } else if (view === "referral") {
       loadReferral();
-    } else if (view === 'settings') {
+    } else if (view === "settings") {
       loadSettings();
-    } else if (view === 'notifications') {
+    } else if (view === "notifications") {
       loadNotifications();
-    } else if (view === 'rank') {
+    } else if (view === "rank") {
       loadLeaderboard();
+    } else if (view === "profile") {
+      loadProfile();
     }
   });
 });

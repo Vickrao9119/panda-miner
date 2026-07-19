@@ -187,8 +187,15 @@ function summarizeError(err) {
 }
 
 function getMongooseOptions() {
+  const allowInvalidCerts = parseBoolean(
+    process.env.MONGO_TLS_ALLOW_INVALID_CERTS,
+    false,
+  );
+  
   const options = {
-    serverSelectionTimeoutMS: Number(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS || 15000),
+    serverSelectionTimeoutMS: Number(
+      process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS || 15000,
+    ),
     connectTimeoutMS: Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 15000),
     socketTimeoutMS: Number(process.env.MONGO_SOCKET_TIMEOUT_MS || 45000),
     maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE || 10),
@@ -198,8 +205,15 @@ function getMongooseOptions() {
     // Explicit TLS configuration for Atlas compatibility
     tls: true,
     tlsCAFile: undefined, // Let driver use system CA
+    tlsAllowInvalidCertificates: allowInvalidCerts,
+    tlsAllowInvalidHostnames: allowInvalidCerts,
   };
 
+  if (allowInvalidCerts) {
+    console.warn(
+      "[mongo] ⚠️  TLS certificate validation DISABLED (for testing only)",
+    );
+  }
   console.log('[mongo] using explicit TLS configuration');
   return options;
 }
