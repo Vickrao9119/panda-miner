@@ -36,7 +36,13 @@ function haptic(style) {
  */
 const INIT_DATA = tg ? tg.initData : '';
 
+const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://panda-miner.onrender.com";
+
 console.log('[app] INIT_DATA length:', INIT_DATA.length, '(empty:', !INIT_DATA, ')');
+console.log("[app] API_BASE:", API_BASE);
 
 /* ---------- API helper ---------- */
 /**
@@ -47,9 +53,9 @@ console.log('[app] INIT_DATA length:', INIT_DATA.length, '(empty:', !INIT_DATA, 
 async function api(path, body) {
   console.log('[api] Request:', path, 'hasInitData:', !!INIT_DATA);
 
-  const res = await fetch('/api' + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const res = await fetch(API_BASE + "/api" + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(Object.assign({ initData: INIT_DATA }, body || {})),
   });
 
@@ -226,7 +232,9 @@ function renderShop() {
 
 async function loadShop() {
   const telegramId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : '';
-  const res = await fetch('/api/shop?telegramId=' + encodeURIComponent(telegramId));
+  const res = await fetch(
+    API_BASE + "/api/shop?telegramId=" + encodeURIComponent(telegramId),
+  );
   const data = await res.json();
   shopItems = data.items;
 }
@@ -263,7 +271,7 @@ function renderRank() {
 
 async function loadLeaderboard() {
   try {
-    const res = await fetch('/api/leaderboard');
+    const res = await fetch(API_BASE + "/api/leaderboard");
     const data = await res.json();
     leaderboardData = data.players || [];
   } catch (e) {
