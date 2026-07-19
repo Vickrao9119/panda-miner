@@ -36,10 +36,7 @@ function haptic(style) {
  */
 const INIT_DATA = tg ? tg.initData : '';
 
-const API_BASE =
-  window.location.hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://panda-miner.onrender.com";
+const API_BASE = "https://panda-miner.onrender.com";
 
 console.log('[app] INIT_DATA length:', INIT_DATA.length, '(empty:', !INIT_DATA, ')');
 console.log("[app] API_BASE:", API_BASE);
