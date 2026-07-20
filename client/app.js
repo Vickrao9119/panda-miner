@@ -918,10 +918,12 @@ document.querySelectorAll('.more-item').forEach(item => {
 
     // Show error message if 401
     if (received401Error) {
+      const errorMessage = e.message || "Unknown authentication error";
       document.body.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:20px;text-align:center;color:#fff;background:#09090B;">
           <div style="font-size:48px;margin-bottom:20px;">🔒</div>
           <h1 style="margin-bottom:10px;">Authentication Failed</h1>
+          <p style="color:#888;margin-bottom:10px;">Error: ${errorMessage}</p>
           <p style="color:#888;margin-bottom:30px;">Please reopen the app in Telegram.</p>
           <a href="https://t.me/Dogeshcoinbot" target="_blank" style="padding:12px 24px;background:#0088cc;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Open in Telegram</a>
         </div>
