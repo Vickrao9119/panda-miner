@@ -193,32 +193,38 @@ function setMascotImg(pose) {
 /* ---------- Render ---------- */
 function render() {
   if (!state) return;
+
+  // Check if DOM elements still exist (may be removed if error page shown)
+  if (!els.playerName) return;
+
   els.playerName.textContent = state.playerName;
   els.profileName.textContent = state.playerName;
   els.coinBalance.textContent = fmt(state.coins);
-  els.levelLabel.textContent = 'Lv. ' + state.level;
+  els.levelLabel.textContent = "Lv. " + state.level;
 
-  els.xpFill.style.width = Math.min(100, (state.xp / state.xpNeeded) * 100) + '%';
-  els.xpText.textContent = fmt(state.xp) + ' / ' + fmt(state.xpNeeded) + ' XP';
+  els.xpFill.style.width =
+    Math.min(100, (state.xp / state.xpNeeded) * 100) + "%";
+  els.xpText.textContent = fmt(state.xp) + " / " + fmt(state.xpNeeded) + " XP";
 
-  els.energyFill.style.width = (state.energy / state.maxEnergy) * 100 + '%';
-  els.energyText.textContent = fmt(state.energy) + '/' + fmt(state.maxEnergy);
+  els.energyFill.style.width = (state.energy / state.maxEnergy) * 100 + "%";
+  els.energyText.textContent = fmt(state.energy) + "/" + fmt(state.maxEnergy);
 
   els.openChestBtn.disabled = !state.chestReady;
-  els.chestSub.textContent = state.chestReady ? 'Open now!' : 'Locked';
+  els.chestSub.textContent = state.chestReady ? "Open now!" : "Locked";
 
   const boxRemaining = state.boxCooldownMs - (Date.now() - state.lastBoxClaim);
   if (boxRemaining <= 0) {
     els.openBoxBtn.disabled = false;
-    els.boxSub.textContent = 'Ready';
+    els.boxSub.textContent = "Ready";
   } else {
     els.openBoxBtn.disabled = true;
     const h = Math.floor(boxRemaining / 3600000);
     const m = Math.floor((boxRemaining % 3600000) / 60000);
-    els.boxSub.textContent = h + 'h ' + m + 'm';
+    els.boxSub.textContent = h + "h " + m + "m";
   }
 
-  els.profileStats.textContent = 'Level ' + state.level + ' · ' + fmt(state.totalMined) + ' coins mined';
+  els.profileStats.textContent =
+    "Level " + state.level + " · " + fmt(state.totalMined) + " coins mined";
 
   renderShop();
   renderRank();
@@ -282,6 +288,7 @@ async function buyItem(itemId) {
 }
 
 function renderRank() {
+  if (!state) return;
   const combined = leaderboardData.concat([{ name: state.playerName + ' (you)', coins: state.totalMined, me: true }])
     .sort((a, b) => b.coins - a.coins);
   els.rankList.innerHTML = '';
@@ -902,6 +909,12 @@ document.querySelectorAll('.more-item').forEach(item => {
 
   try {
     await refreshState();
+
+    // Only render if state was loaded successfully
+    if (!state) {
+      throw new Error("Failed to load user state from server");
+    }
+
     await loadShop();
     await loadLeaderboard();
     await loadProfile();
