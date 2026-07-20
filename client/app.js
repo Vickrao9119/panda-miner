@@ -1,6 +1,12 @@
 /* ---------- Telegram WebApp integration ---------- */
 const tg = window.Telegram ? window.Telegram.WebApp : null;
 
+// Check if running inside Telegram WebApp
+const IS_TELEGRAM = tg !== null;
+
+// Track if we received a 401 error to stop retries
+let received401Error = false;
+
 // Initialize Telegram WebApp if available
 if (tg) {
   tg.ready();
@@ -13,7 +19,7 @@ if (tg) {
   }
   console.log('[telegram] WebApp initialized, initData available:', !!tg.initData);
 } else {
-  console.log('[telegram] Running outside Telegram (dev mode)');
+  console.log("[telegram] Running outside Telegram");
 }
 
 /**
@@ -32,9 +38,9 @@ function haptic(style) {
 
 /**
  * Raw initData string Telegram gives us.
- * Empty outside Telegram - server will use fake user in dev mode when ALLOW_DEV_AUTH=true.
+ * Only available inside Telegram WebApp.
  */
-const INIT_DATA = tg ? tg.initData : '';
+const INIT_DATA = tg && tg.initData ? tg.initData : "";
 
 const API_BASE = "https://panda-miner.onrender.com";
 
@@ -44,11 +50,25 @@ console.log("[app] API_BASE:", API_BASE);
 /* ---------- API helper ---------- */
 /**
  * Makes authenticated API requests to the backend.
- * Automatically includes Telegram initData for authentication.
- * In dev mode (outside Telegram), sends empty initData - server uses fake user.
+ * Only includes Telegram initData when available (inside Telegram).
+ * Stops retrying after receiving a 401 error.
  */
 async function api(path, body) {
-  console.log('[api] Request:', path, 'hasInitData:', !!INIT_DATA);
+  // Don't make API calls if not in Telegram
+  if (!IS_TELEGRAM) {
+    console.warn("[api] Blocking API call - not running in Telegram");
+    throw new Error("Please open this app inside Telegram");
+  }
+
+  // Don't retry after 401 error
+  if (received401Error) {
+    console.warn("[api] Blocking API call - previously received 401 error");
+    throw new Error(
+      "Authentication failed. Please reopen the app in Telegram.",
+    );
+  }
+
+  console.log("[api] Request:", path, "hasInitData:", !!INIT_DATA);
 
   const res = await fetch(API_BASE + "/api" + path, {
     method: "POST",
@@ -59,13 +79,20 @@ async function api(path, body) {
   const data = await res.json();
 
   if (!res.ok) {
-    console.error('[api] Error:', data.error, data);
-    const err = new Error(data.error || 'Request failed');
+    console.error("[api] Error:", data.error, data);
+
+    // Stop retries on 401 Unauthorized
+    if (res.status === 401) {
+      received401Error = true;
+      console.error("[api] Received 401 - stopping further API calls");
+    }
+
+    const err = new Error(data.error || "Request failed");
     err.data = data;
     throw err;
   }
 
-  console.log('[api] Success:', path);
+  console.log("[api] Success:", path);
   return data;
 }
 
@@ -228,6 +255,10 @@ function renderShop() {
 }
 
 async function loadShop() {
+  if (!IS_TELEGRAM) {
+    console.warn("[app] Blocking loadShop - not running in Telegram");
+    return;
+  }
   const telegramId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : '';
   const res = await fetch(
     API_BASE + "/api/shop?telegramId=" + encodeURIComponent(telegramId),
@@ -267,6 +298,10 @@ function renderRank() {
 }
 
 async function loadLeaderboard() {
+  if (!IS_TELEGRAM) {
+    console.warn("[app] Blocking loadLeaderboard - not running in Telegram");
+    return;
+  }
   try {
     const res = await fetch(API_BASE + "/api/leaderboard");
     const data = await res.json();
@@ -732,29 +767,39 @@ els.openBoxBtn.addEventListener('click', async () => {
 });
 
 /* ---------- Periodic state refresh (keeps energy bar + cooldowns accurate) ---------- */
+let refreshInterval = null;
+
 /**
  * Periodically refreshes user state from server.
  * This keeps energy bar and cooldown timers in sync with server.
  * Runs every 6 seconds (4 * ENERGY_REGEN_MS).
+ * Stops after 401 error to prevent infinite retries.
  */
 async function refreshState() {
+  // Don't refresh if not in Telegram or after 401 error
+  if (!IS_TELEGRAM || received401Error) {
+    return;
+  }
+
   try {
-    console.log('[app] Refreshing state...');
-    const data = await api('/state');
+    console.log("[app] Refreshing state...");
+    const data = await api("/state");
     state = data;
     render();
-    console.log('[app] State refreshed:', {
+    console.log("[app] State refreshed:", {
       coins: state.coins,
       energy: state.energy,
-      level: state.level
+      level: state.level,
     });
   } catch (e) {
-    console.error('[app] State refresh failed:', e);
+    console.error("[app] State refresh failed:", e);
+    // Stop periodic refresh on error
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
   }
 }
-
-// Start periodic state refresh
-setInterval(refreshState, ENERGY_REGEN_MS * 4);
 
 /* ---------- Tap handler ---------- */
 els.mascotBtn.addEventListener('click', mine);
@@ -839,16 +884,50 @@ document.querySelectorAll('.more-item').forEach(item => {
  * Loads initial state from server and renders the UI.
  */
 (async function init() {
-  console.log('[app] Initializing application...');
+  console.log("[app] Initializing application...");
+
+  // Check if running in Telegram
+  if (!IS_TELEGRAM) {
+    console.warn("[app] Not running in Telegram - showing message");
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:20px;text-align:center;color:#fff;background:#09090B;">
+        <div style="font-size:48px;margin-bottom:20px;">🐼</div>
+        <h1 style="margin-bottom:10px;">Panda Miner</h1>
+        <p style="color:#888;margin-bottom:30px;">Please open this app inside Telegram to play.</p>
+        <a href="https://t.me/Dogeshcoinbot" target="_blank" style="padding:12px 24px;background:#0088cc;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Open in Telegram</a>
+      </div>
+    `;
+    return;
+  }
+
   try {
     await refreshState();
     await loadShop();
     await loadLeaderboard();
     await loadProfile();
     render();
-    console.log('[app] Application initialized successfully');
+
+    // Start periodic state refresh only if in Telegram and no 401 error
+    if (!received401Error) {
+      refreshInterval = setInterval(refreshState, ENERGY_REGEN_MS * 4);
+    }
+
+    console.log("[app] Application initialized successfully");
   } catch (e) {
-    console.error('[app] Initialization failed:', e);
-    showToast('Failed to load game data');
+    console.error("[app] Initialization failed:", e);
+
+    // Show error message if 401
+    if (received401Error) {
+      document.body.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:20px;text-align:center;color:#fff;background:#09090B;">
+          <div style="font-size:48px;margin-bottom:20px;">🔒</div>
+          <h1 style="margin-bottom:10px;">Authentication Failed</h1>
+          <p style="color:#888;margin-bottom:30px;">Please reopen the app in Telegram.</p>
+          <a href="https://t.me/Dogeshcoinbot" target="_blank" style="padding:12px 24px;background:#0088cc;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Open in Telegram</a>
+        </div>
+      `;
+    } else {
+      showToast("Failed to load game data");
+    }
   }
 })();
