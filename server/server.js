@@ -16,7 +16,18 @@ const MONGO_URI = process.env.MONGO_URI;
 console.log(`[env] loaded ${envInfo.loadedKeys.length} keys from ${envInfo.envPath}`);
 console.log(`[env] MONGO_URI ${MONGO_URI ? 'is configured' : 'is not configured'}`);
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://panda-miner.vercel.app",
+      "https://panda-miner.onrender.com",
+      "*",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 
 app.get('/health', (req, res) => {
